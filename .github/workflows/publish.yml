@@ -1,0 +1,23 @@
+name: Publish
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: echo "version=1.0.0-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Notify coordinator
+        env:
+          COORD_URL: ${{ secrets.COORD_URL }}
+        run: |
+          curl -sf -X POST "$COORD_URL/events" \
+            -H "Content-Type: application/json" \
+            -d "{\"type\":\"artifact_published\",\"repo\":\"$GITHUB_REPOSITORY\",\"version\":\"${{ steps.version.outputs.version }}\"}"
